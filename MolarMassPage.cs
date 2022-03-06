@@ -77,6 +77,7 @@ namespace chemistry_app
         {
             stopwatch.Start();
             int circBracketCounter = 0;
+            int squareBracketCounter = 0;
             string entered_sting = entry.Text;
             IsLower isLower = (char element) => element.Equals(char.ToLower(element)) && char.IsLetter(element);
             double molar_mass = 0;
@@ -172,9 +173,69 @@ namespace chemistry_app
                 for(int i = 0; i < entered_sting.Length; i++)
                 {
                     latter = entered_sting[i];
-                   // label.Text = "ZGGOYJHGVLKGHVJBLKHJGBLKBHJL";
+                    // label.Text = "ZGGOYJHGVLKGHVJBLKHJGBLKBHJL";
 
-                    if (char.IsWhiteSpace(latter)) { }
+                    if (char.IsWhiteSpace(latter) || latter=='+' || latter=='-') { }
+                    else if (latter == '[')
+                    {
+                        if (element != "")
+                        {
+                            if (ContainsKey(element))
+                            {
+                                if (multiplier == "")
+                                {
+                                    multiplier = "1";
+                                }
+                                molar_mass += elements[element][0] * int.Parse(multiplier);
+                            }
+                        }
+                        masses.Push(molar_mass);
+                        //Console.WriteLine("Push");
+                        element = "";
+                        multiplier = "";
+                        prefType = PrefType.OpenBracket;
+                        squareBracketCounter++;
+                        molar_mass = 0;
+                    }
+                    else if (latter == ']')
+                    {
+                        if (squareBracketCounter == 0)
+                        {
+                            Error(Errors.OpenedBracket);
+                            // Console.WriteLine("E2");
+                            return;
+                        }
+                        if (element == "" && prefType != PrefType.OpenBracket)
+                        {
+                            if (multiplier == "")
+                            {
+                                multiplier = "1";
+                            }
+                            // Console.WriteLine("pop1");
+                            molar_mass *= int.Parse(multiplier);
+                            molar_mass += masses.Pop();
+                        }
+                        else
+                        {
+                            if (ContainsKey(element))
+                            {
+                                if (multiplier == "")
+                                {
+                                    multiplier = "1";
+                                }
+                                molar_mass += elements[element][0] * int.Parse(multiplier);
+                            }
+                            else
+                            {
+                                Error(Errors.WrongElement);
+                                return;
+                            }
+                        }
+                        prefType = PrefType.CloseBracket;
+                        squareBracketCounter--;
+                        multiplier = "";
+                        element = "";
+                    }
                     else if(latter == '(')
                     {
                         //label.Text = "1wwef";
@@ -299,7 +360,7 @@ namespace chemistry_app
                     }
                     if (i == entered_sting.Length - 1)
                     {
-                        if(circBracketCounter != 0)
+                        if(circBracketCounter != 0 || squareBracketCounter!=0)
                         {
                             Error(Errors.OpenedBracket);
                            // Console.WriteLine("E6");
